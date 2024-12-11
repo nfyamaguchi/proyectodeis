@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario de Personas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <h2 class="form-title text-center">Registro de Personas</h2>
+            
+            <!-- Formulario -->   
+            <form id="formPersona">
+                <input type="hidden" id="id_persona" name="id_persona"> <!-- Campo oculto para el ID -->
+                <div class="mb-3">
+                    <label for="appaterno" class="form-label">Apellido Paterno</label>
+                    <input type="text" class="form-control" id="appaterno" name="appaterno" placeholder="Ingrese apellido paterno">
+                </div>
+                <div class="mb-3">
+                    <label for="apmaterno" class="form-label">Apellido Materno</label>
+                    <input type="text" class="form-control" id="apmaterno" name="apmaterno" placeholder="Ingrese apellido materno">
+                </div>
+                <div class="mb-3">
+                    <label for="nombre" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="nombre" name="nombre" placeholder="Ingrese nombre(s)">
+                </div>
+                <div class="mb-3">
+                    <label for="fdn" class="form-label">Fecha de Nacimiento</label>
+                    <input type="date" class="form-control" id="fdn" name="fdn">
+                </div>
+                <div class="mb-3">
+                    <label for="curp" class="form-label">CURP</label>
+                    <input type="text" class="form-control" id="curp" name="curp" placeholder="Ingrese el CURP">
+                </div>
+                <div class="mb-3">
+                    <label for="sexo" class="form-label">Sexo</label>
+                    <select class="form-select" id="sexo" name="sexo">
+                        <option value="" selected disabled>Seleccione su sexo</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+                <div class="d-flex gap-3 mt-4">
+                    <button type="submit" id="btnGuardar" class="btn btn-primary flex-fill">Guardar</button>
+                    <button type="button" id="btnListar" class="btn btn-success flex-fill">Listar</button>
+                </div>
+            </form>
+            
+            <!-- Tabla para mostrar los datos -->
+            <table class="table mt-4" id="tablaPersonas" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Apellido Paterno</th>
+                        <th>Apellido Materno</th>
+                        <th>Nombre</th>
+                        <th>Fecha de Nacimiento</th>
+                        <th>CURP</th>
+                        <th>Sexo</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Los datos se llenarán dinámicamente -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Scripts de Bootstrap y jQuery -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <!-- Scripts personalizados -->
+    <script>
+        $(document).ready(function () {
+            // Manejar el envío del formulario
+            $('#formPersona').on('submit', function (e) {
+                e.preventDefault();
+
+                $.ajax({
+                    url: 'guardarPersona.php',
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    success: function (response) {
+                        alert(response);
+                        $('#formPersona')[0].reset();
+                    },
+                    error: function () {
+                        alert('Error al guardar los datos.');
+                    }
+                });
+            });
+
+            // Botón "Listar"
+            $('#btnListar').on('click', function () {
+                $.ajax({
+                    url: 'listarPersonas.php',
+                    method: 'GET',
+                    success: function (data) {
+                        $('#tablaPersonas tbody').html(data);
+                        $('#tablaPersonas').show();
+                    },
+                    error: function () {
+                        alert('Error al obtener los datos.');
+                    }
+                });
+            });
+
+            // Botón Editar
+            $(document).on('click', '.btnEditar', function () {
+                const id = $(this).data('id'); // Obtener el ID del registro
+
+                $.ajax({
+                    url: 'editarPersona.php', // Archivo para obtener los datos del registro
+                    method: 'POST',
+                    data: { id: id },
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data.error) {
+                            alert(data.error);
+                        } else {
+                            // Llenar los campos del formulario
+                            $('#id_persona').val(data.id_persona); // Campo oculto para el ID
+                            $('#appaterno').val(data.appaterno);
+                            $('#apmaterno').val(data.apmaterno);
+                            $('#nombre').val(data.nombre);
+                            $('#fdn').val(data.fdn);
+                            $('#curp').val(data.curp);
+                            $('#sexo').val(data.sexo);
+
+                            // Mostrar el formulario si está oculto
+                            $('#formPersona').show();
+                        }
+                    },
+                    error: function () {
+                        alert('Error al cargar los datos para editar.');
+                    }
+                });
+            });
+
+            // Botón Eliminar
+            $(document).on('click', '.btnEliminar', function () {
+                const id = $(this).data('id');
+                if (confirm('¿Estás seguro de eliminar este registro?')) {
+                    $.ajax({
+                        url: 'eliminarPersona.php',
+                        method: 'POST',
+                        data: { id: id },
+                        success: function (response) {
+                            alert(response);
+                            $('#btnListar').click();
+                        },
+                        error: function () {
+                            alert('Error al eliminar el registro.');
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
